@@ -6,6 +6,7 @@ from flask import Flask
 from confluent_kafka import Consumer
 from confluent_kafka import KafkaError
 from confluent_kafka import KafkaException
+from .log import consumer_logger
 
 
 class FlaskKafkaConsumer:
@@ -23,6 +24,7 @@ class FlaskKafkaConsumer:
     def init_app(self, app: Flask) -> None:
         self._app = app
         app.extensions['kafka_consumer'] = self
+        self.consumer_logger = consumer_logger(name='consumer_logger', file=app.config.get('KAFKA_CONSUMER_LOG_PATH', 'logs/kafka_consumer.log'))
 
     def handle_message(self, topic: str, group_id: str, num_consumers: int = 1, **kwargs) -> Callable:
         def decorator(func):
@@ -87,6 +89,7 @@ class FlaskKafkaConsumer:
 
                 for topic, func in topics:
                     if msg.topic() == topic:
+                        self.consumer_logger.info('', extra={"consumer_message": msg})
                         func(msg)
                         break
                     

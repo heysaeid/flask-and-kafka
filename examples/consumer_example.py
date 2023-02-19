@@ -9,7 +9,7 @@ kafka_consumer = FlaskKafkaConsumer(app)
 
 @kafka_consumer.handle_message(topic='test-topic', group_id='group1')
 def handle_logistic_message(msg):
-    print(msg)
+    print(msg.value())
 
 if __name__ == '__main__':
     kafka_consumer.start()

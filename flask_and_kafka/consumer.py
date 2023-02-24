@@ -1,3 +1,4 @@
+import importlib
 import threading
 from typing import List
 from typing import Tuple
@@ -25,6 +26,10 @@ class FlaskKafkaConsumer:
         self._app = app
         app.extensions['kafka_consumer'] = self
         self.consumer_logger = consumer_logger(name='consumer_logger', file=app.config.get('KAFKA_CONSUMER_LOG_PATH', 'logs/kafka_consumer.log'))
+
+    def register_consumers(self, consumers: List[str]) -> None:
+        for consumer_name in consumers:
+            importlib.import_module(consumer_name)
 
     def handle_message(self, topic: str, group_id: str, num_consumers: int = 1, **kwargs) -> Callable:
         def decorator(func):

@@ -56,4 +56,46 @@ if __name__ == '__main__':
     close_kafka(consumer=kafka_consumer)
     app.run()
 ```
-Note that you must use close_kafka to close consumers.
+<hr style="border:2px solid gray">
+Using producer:
+
+```
+from flask import Flask
+from flask_and_kafka import FlaskKafkaProducer
+from flask_and_kafka import close_kafka
+
+
+app = Flask(__name__)
+app.config['KAFKA_PRODUCER_CONFIGS'] = {"bootstrap.servers": 'localhost:9092'}
+kafka_producer = FlaskKafkaProducer(app)
+
+kafka_producer.send_message(topic='test-topic', value="Hello, World!")
+kafka_producer.send_message(topic='test-topic', value="Hello, World!")
+kafka_producer.send_message(topic='test-topic', value="Hello, World!")
+kafka_producer.send_message(topic='test-topic', value="Hello, World!")
+
+if __name__ == '__main__':
+    close_kafka(producer=kafka_producer)
+    app.run()
+```
+
+**‌Note that you must use close_kafka to close consumer and producer.**
+<hr style="border:2px solid gray">
+
+handle_message decorator:
+
++ topic:* your-topic-name
++ group_id:* your-consumer-group-id
++ num_consumers: 1 # The number of consumer instances
++ app_context: False # If you need to push the app context, set it to True
++ **kwargs
+
+send_message:
+
++ topic:* your-topic-name
++ value:* value
++ key: None
++ flush: False
++ poll: True
++ poll_timeout: 1
++ **kwargs

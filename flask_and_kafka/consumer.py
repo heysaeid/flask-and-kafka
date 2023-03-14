@@ -33,6 +33,17 @@ class FlaskKafkaConsumer:
 
     def handle_message(self, topic: str, group_id: str, num_consumers: int = 1, app_context: bool = False, **kwargs) -> Callable:
         def decorator(func):
+
+            def with_app_context_handler(msg, func):
+                with self._app.app_context():
+                    func(msg)
+
+            def wrapped_func(msg):
+                if app_context:
+                    with_app_context_handler(msg, func)
+                else:
+                    func(msg)
+
             if group_id not in self.consumers:
                 self.consumers[group_id] = []
                 self.topics[group_id] = []
@@ -47,19 +58,7 @@ class FlaskKafkaConsumer:
                 })
                 consumer.subscribe([topic])
                 self.consumers[group_id].append(consumer)
-                self.topics[group_id].append((topic, func))
-
-            def with_app_context_handler(msg, func):
-                with self._app.app_context():
-                    func(msg)
-
-            def wrapped_func(msg):
-                if app_context:
-                    with_app_context_handler(msg, func)
-                else:
-                    func(msg)
-
-            return wrapped_func
+                self.topics[group_id].append((topic, wrapped_func))
 
         return decorator
     

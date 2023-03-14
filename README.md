@@ -82,20 +82,39 @@ if __name__ == '__main__':
 **‌Note that you must use close_kafka to close consumer and producer.**
 <hr style="border:2px solid gray">
 
-handle_message decorator:
+### FlaskKafkaConsumer - handle_message decorator:
 
+A decorator that registers a message handler function for the given topic and group ID.
+
+Args:
 + topic (str): The Kafka topic to subscribe to.
 + group_id (str): The Kafka consumer group ID to use.
 + num_consumers (int, optional): The number of Kafka consumer threads to spawn (default is 1).
 + app_context (bool, optional): Whether to run the message handler function inside a Flask application context (default is False).
 + **kwargs: Additional arguments to pass to the Kafka consumer constructor.
 
-send_message:
+Returns: Callable: A decorator function that wraps the message handler function.
 
-+ topic:* your-topic-name
-+ value:* value
-+ key: None
-+ flush: False
-+ poll: True
-+ poll_timeout: 1
-+ **kwargs
+
+### FlaskKafkaProducer - send_message method:
+
+Send a message to the specified Kafka topic with the given key and value.
+
+Args:
++ topic (str): The Kafka topic to send the message to.
++ value (any): The message value to send.
++ key (str, optional): The message key to use (default: None).
++ flush (bool, optional): Whether to flush the producer's message buffer immediately after sending the message (default: False).
++ poll (bool, optional): Whether to wait for any outstanding messages to be sent before returning (default: True).
++ poll_timeout (float, optional): The maximum amount of time to wait for outstanding messages to be sent, in seconds (default: 1).
++ **kwargs: Additional keyword arguments to pass to the underlying Kafka producer.
+
+Returns: None
+
+Raises: KafkaError: If there is an error producing the message.
+
+Note:
+
++ If `flush` is True, any outstanding messages in the producer's buffer will be sent immediately after the current message is sent.
++ If `poll` is True, the producer will wait for any outstanding messages to be sent before returning, up to the specified `poll_timeout`.
++ The `poll` argument is only relevant if `flush` is False, since the producer always waits for outstanding messages to be sent before flushing. 

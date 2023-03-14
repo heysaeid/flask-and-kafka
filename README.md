@@ -84,11 +84,11 @@ if __name__ == '__main__':
 
 handle_message decorator:
 
-+ topic:* your-topic-name
-+ group_id:* your-consumer-group-id
-+ num_consumers: 1 # The number of consumer instances
-+ app_context: False # If you need to push the app context, set it to True
-+ **kwargs
++ topic (str): The Kafka topic to subscribe to.
++ group_id (str): The Kafka consumer group ID to use.
++ num_consumers (int, optional): The number of Kafka consumer threads to spawn (default is 1).
++ app_context (bool, optional): Whether to run the message handler function inside a Flask application context (default is False).
++ **kwargs: Additional arguments to pass to the Kafka consumer constructor.
 
 send_message:
 

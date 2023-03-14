@@ -32,6 +32,26 @@ class FlaskKafkaConsumer:
             importlib.import_module(consumer_name)
 
     def handle_message(self, topic: str, group_id: str, num_consumers: int = 1, app_context: bool = False, **kwargs) -> Callable:
+        """
+            A decorator that registers a message handler function for the given topic and group ID.
+
+            Args:
+                topic (str): The Kafka topic to subscribe to.
+                group_id (str): The Kafka consumer group ID to use.
+                num_consumers (int, optional): The number of Kafka consumer threads to spawn (default is 1).
+                app_context (bool, optional): Whether to run the message handler function inside a Flask application context (default is False).
+                **kwargs: Additional arguments to pass to the Kafka consumer constructor.
+
+            Returns:
+                Callable: A decorator function that wraps the message handler function.
+
+            Usage:
+                @flask_kafka.handle_message('my-topic', 'my-group', app_context=True)
+                def my_message_handler(msg):
+                    # This function will be executed in a Flask application context.
+                    db.session.add(MyModel(msg.value()))
+                    db.session.commit()
+        """
         def decorator(func):
 
             def with_app_context_handler(msg, func):

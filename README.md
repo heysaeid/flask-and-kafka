@@ -1,12 +1,13 @@
 # Flask And Kafka
 Easily write your kafka producers and consumers in flask.
 
-This plugin was developed using confluent-kafka to help you use your producers and consumers alongside your Flask project as easily as possible.
+This plugin was developed using confluent-kafka to help you use your producers and consumers alongside your Flask project as easily as possible. Also, kafka-and-consumer logs all messages in producer and consumer
+
 
 ## Installation
 Install it with the following command:
 ```
-pip install flask-and-kafka
+pip install git+https://github.com/heysaeid/flask-and-kafka
 ```
 
 ## Usage
@@ -19,6 +20,8 @@ from flask_and_kafka import close_kafka
 
 app = Flask(__name__)
 app.config['KAFKA_CONSUMER_CONFIGS'] = {"bootstrap.servers": 'localhost:9092'}
+app.config['KAFKA_CONSUMER_LOG_PATH'] = "logs/kafka_consumer.log"
+
 kafka_consumer = FlaskKafkaConsumer(app)
 
 @kafka_consumer.handle_message(topic='test-topic', group_id='group1')
@@ -48,6 +51,8 @@ from flask_and_kafka import close_kafka
 
 app = Flask(__name__)
 app.config['KAFKA_CONSUMER_CONFIGS'] = {"bootstrap.servers": 'localhost:9092'}
+app.config['KAFKA_CONSUMER_LOG_PATH'] = "logs/kafka_consumer.log"
+
 kafka_consumer = FlaskKafkaConsumer(app)
 kafka_consumer.register_consumers(['consumers.test_consumer'])
 
@@ -67,6 +72,7 @@ from flask_and_kafka import close_kafka
 
 app = Flask(__name__)
 app.config['KAFKA_PRODUCER_CONFIGS'] = {"bootstrap.servers": 'localhost:9092'}
+app.config['KAFKA_PRODUCER_LOG_PATH'] = "logs/kafka_producer.log"
 kafka_producer = FlaskKafkaProducer(app)
 
 kafka_producer.send_message(topic='test-topic', value="Hello, World!")

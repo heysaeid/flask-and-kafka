@@ -88,7 +88,7 @@ if __name__ == '__main__':
 **‌Note that you must use close_kafka to close consumer and producer.**
 <hr style="border:2px solid gray">
 
-### FlaskKafkaConsumer - handle_message decorator:
+#### FlaskKafkaConsumer - handle_message decorator:
 
 A decorator that registers a message handler function for the given topic and group ID.
 
@@ -102,7 +102,7 @@ Args:
 Returns: Callable: A decorator function that wraps the message handler function.
 
 
-### FlaskKafkaProducer - send_message method:
+#### FlaskKafkaProducer - send_message method:
 
 Send a message to the specified Kafka topic with the given key and value.
 

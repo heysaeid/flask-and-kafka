@@ -7,7 +7,7 @@ This plugin was developed using confluent-kafka to help you use your producers a
 ## Installation
 Install it with the following command:
 ```
-pip install git+https://github.com/heysaeid/flask-and-kafka
+pip install flask-and-kafka
 ```
 
 ## Usage

@@ -1,3 +1,6 @@
 __pycache__/
 env3/
 logs/
+dist/
+flask_and_kafka.egg-info/
+build/

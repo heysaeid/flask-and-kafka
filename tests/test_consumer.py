@@ -18,14 +18,9 @@ class TestFlaskKafkaConsumer(unittest.TestCase):
         self.consumer = FlaskKafkaConsumer(self.app)
 
     def test_handle_message_decorator(self):
-        topic = 'test-topic'
-        group_id = 'test-group'
-        num_consumers = 1
-
         @self.consumer.handle_message(topic=self.topic, group_id=self.group_id, num_consumers=self.num_consumers)
         def test_handler(msg):
-            print(f"Received message: {msg.value().decode('utf-8')}")
-
+            pass
         self.assertEqual(len(self.consumer.consumers), self.num_consumers)
         self.assertEqual(len(self.consumer.topics[self.group_id]), 1)
 

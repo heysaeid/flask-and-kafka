@@ -10,8 +10,8 @@ class ConsumerFormatter(logging.Formatter):
             "time": record.asctime, 
             "threadName": record.threadName,
             'topic': record.consumer_message.topic(),
-            'key': record.consumer_message.key(),
-            'value': str(record.consumer_message.value(), 'utf-8'),
+            'key': str(record.consumer_message.key()),
+            'value': str(record.consumer_message.value()),
             'partition': record.consumer_message.partition(),
             'offset': record.consumer_message.offset(),
             'error': record.consumer_message.error()

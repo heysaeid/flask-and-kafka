@@ -52,13 +52,15 @@ class TestFlaskKafkaConsumer(unittest.TestCase):
         def test_handler(msg):
             nonlocal handler_was_called
             handler_was_called = True
+            self.assertEqual(msg.topic(), self.topic)
+
 
         msg = mock.Mock(confluent_kafka.Message)
         msg.topic.return_value = self.topic
         msg.partition.return_value = 0
-        msg.offset.return_value = 0
+        msg.offset.return_value = 1
         msg.value.return_value = b"test value"
-        msg.key.return_value = b"key key"  # <- Key can be a byte string
+        msg.key.return_value = b"key value"  # can be bytes or string.
         msg.error.return_value = None
         msg.headers.return_value = None
 

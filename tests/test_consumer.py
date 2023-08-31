@@ -53,7 +53,12 @@ class TestFlaskKafkaConsumer(unittest.TestCase):
             nonlocal handler_was_called
             handler_was_called = True
             self.assertEqual(msg.topic(), self.topic)
-
+            self.assertEqual(msg.partition(), 0)
+            self.assertEqual(msg.offset(), 1)
+            self.assertEqual(msg.value(), b'test value')
+            self.assertEqual(msg.key(), b'key value')
+            self.assertEqual(msg.error(), None)
+            self.assertEqual(msg.headers(), None)
 
         msg = mock.Mock(confluent_kafka.Message)
         msg.topic.return_value = self.topic
@@ -65,7 +70,6 @@ class TestFlaskKafkaConsumer(unittest.TestCase):
         msg.headers.return_value = None
 
         self.consumer._call_message_handlers(msg, self.consumer.topics[self.group_id])
-
         self.assertTrue(handler_was_called, "handler was not called")
 
 

@@ -1,5 +1,7 @@
 import unittest
 from unittest import mock
+
+import confluent_kafka
 from flask import Flask
 from flask_and_kafka import FlaskKafkaConsumer
 
@@ -41,6 +43,29 @@ class TestFlaskKafkaConsumer(unittest.TestCase):
 
         self.assertEqual(len(self.consumer.consumers), 2)
         self.assertEqual(len(self.consumer.topics), 2)
+
+    def test_call_message_handler(self):
+
+        handler_was_called = False
+
+        @self.consumer.handle_message(self.topic, self.group_id, 1)
+        def test_handler(msg):
+            nonlocal handler_was_called
+            handler_was_called = True
+
+        msg = mock.Mock(confluent_kafka.Message)
+        msg.topic.return_value = self.topic
+        msg.partition.return_value = 0
+        msg.offset.return_value = 0
+        msg.value.return_value = b"test value"
+        msg.key.return_value = b"key key"  # <- Key can be a byte string
+        msg.error.return_value = None
+        msg.headers.return_value = None
+
+        self.consumer._call_message_handlers(msg, self.consumer.topics[self.group_id])
+
+        self.assertTrue(handler_was_called, "handler was not called")
+
 
     def test_start_stop(self):
         @self.consumer.handle_message(self.topic, self.group_id, self.num_consumers)

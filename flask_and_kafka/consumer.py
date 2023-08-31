@@ -117,14 +117,17 @@ class FlaskKafkaConsumer:
                     else:
                         raise KafkaException(msg.error())
 
-                for topic, func in topics:
-                    if msg.topic() == topic:
-                        self.consumer_logger.info('', extra={"consumer_message": msg})
-                        func(msg)
-                        break
+                self._call_message_handlers(msg, topics)
                     
                 consumer.commit(asynchronous=True) # commit offsets after processing the batch of messages
         except KafkaException as e:
             print('Exception in Kafka consumer thread: %s', e)            
         finally:
             consumer.close() # close the consumer when the thread is terminated
+
+    def _call_message_handlers(self, msg, topics):
+        for topic, func in topics:
+            if msg.topic() == topic:
+                self.consumer_logger.info('', extra={"consumer_message": msg})
+                func(msg)
+                break

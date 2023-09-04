@@ -1,5 +1,7 @@
 import unittest
 from unittest import mock
+
+import confluent_kafka
 from flask import Flask
 from flask_and_kafka import FlaskKafkaConsumer
 
@@ -18,14 +20,9 @@ class TestFlaskKafkaConsumer(unittest.TestCase):
         self.consumer = FlaskKafkaConsumer(self.app)
 
     def test_handle_message_decorator(self):
-        topic = 'test-topic'
-        group_id = 'test-group'
-        num_consumers = 1
-
         @self.consumer.handle_message(topic=self.topic, group_id=self.group_id, num_consumers=self.num_consumers)
         def test_handler(msg):
-            print(f"Received message: {msg.value().decode('utf-8')}")
-
+            pass
         self.assertEqual(len(self.consumer.consumers), self.num_consumers)
         self.assertEqual(len(self.consumer.topics[self.group_id]), 1)
 
@@ -46,6 +43,35 @@ class TestFlaskKafkaConsumer(unittest.TestCase):
 
         self.assertEqual(len(self.consumer.consumers), 2)
         self.assertEqual(len(self.consumer.topics), 2)
+
+    def test_call_message_handler(self):
+
+        handler_was_called = False
+
+        @self.consumer.handle_message(self.topic, self.group_id, 1)
+        def test_handler(msg):
+            nonlocal handler_was_called
+            handler_was_called = True
+            self.assertEqual(msg.topic(), self.topic)
+            self.assertEqual(msg.partition(), 0)
+            self.assertEqual(msg.offset(), 1)
+            self.assertEqual(msg.value(), b'test value')
+            self.assertEqual(msg.key(), b'key value')
+            self.assertEqual(msg.error(), None)
+            self.assertEqual(msg.headers(), None)
+
+        msg = mock.Mock(confluent_kafka.Message)
+        msg.topic.return_value = self.topic
+        msg.partition.return_value = 0
+        msg.offset.return_value = 1
+        msg.value.return_value = b"test value"
+        msg.key.return_value = b"key value"  # can be bytes or string.
+        msg.error.return_value = None
+        msg.headers.return_value = None
+
+        self.consumer._call_message_handlers(msg, self.consumer.topics[self.group_id])
+        self.assertTrue(handler_was_called, "handler was not called")
+
 
     def test_start_stop(self):
         @self.consumer.handle_message(self.topic, self.group_id, self.num_consumers)

@@ -54,12 +54,16 @@ class FlaskKafkaProducer:
             if poll:
                 self.producer.poll(poll_timeout)
         finally:
+            if isinstance(value, bytes):
+                value = str('value')
+            if isinstance(key, bytes):
+                key = str('value')
             self.producer_logger.info('', extra={
                 'producer_log': {
                     'topic': topic,
                     'key': key,
                     'value': value,
-                    'flush':flush,
+                    'flush': flush,
                     'poll': poll,
                     'poll_timeout': poll_timeout,
                     'error': error,

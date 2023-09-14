@@ -55,9 +55,9 @@ class FlaskKafkaProducer:
                 self.producer.poll(poll_timeout)
         finally:
             if isinstance(value, bytes):
-                value = str('value')
+                value = repr(value)
             if isinstance(key, bytes):
-                key = str('value')
+                key = repr(key)
             self.producer_logger.info('', extra={
                 'producer_log': {
                     'topic': topic,

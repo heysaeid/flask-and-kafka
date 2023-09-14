@@ -25,13 +25,20 @@ class TestFlaskKafkaProducer(unittest.TestCase):
         self.assertEqual(self.mock_producer.produce.call_count, 1)
 
     def test_send_message_byte_values(self):
+        mock_logger_info = Mock()
         message_bytes = b'Hello, Bytes!'
         key_bytes = b'key'
         with patch.object(self.producer, 'producer', self.mock_producer):
-            self.producer.send_message(self.topic, message_bytes, key=key_bytes)
+            with patch.object(self.producer.producer_logger, 'info', mock_logger_info):
+                self.producer.send_message(self.topic, message_bytes, key=key_bytes)
 
         self.mock_producer.produce.assert_called_once_with(topic=self.topic, value=message_bytes, key=key_bytes)
         self.assertEqual(self.mock_producer.produce.call_count, 1)
+
+        self.assertEqual(mock_logger_info.call_args.kwargs['extra']['producer_log']['key'],
+                         "b'key'")
+        self.assertEqual(mock_logger_info.call_args.kwargs['extra']['producer_log']['value'],
+                         "b'Hello, Bytes!'")
 
     def test_send_message_flush(self):
         with patch.object(self.producer, 'producer', self.mock_producer):

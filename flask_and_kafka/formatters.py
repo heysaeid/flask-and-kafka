@@ -22,6 +22,9 @@ class ProducerFormatter(logging.Formatter):
 
     def format(self, record):
         super().format(record)
+        for entry_name, entry_value in record.producer_log.items():
+            if isinstance(entry_value, bytes):
+                record.producer_log[entry_name] = repr(entry_value)
         return json.dumps({
             "time": record.asctime,
             "threadName": record.threadName, 

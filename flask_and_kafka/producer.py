@@ -59,7 +59,7 @@ class FlaskKafkaProducer:
                     'topic': topic,
                     'key': key,
                     'value': value,
-                    'flush':flush,
+                    'flush': flush,
                     'poll': poll,
                     'poll_timeout': poll_timeout,
                     'error': error,

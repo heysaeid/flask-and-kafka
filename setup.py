@@ -7,7 +7,7 @@ with open("README.md", "r") as f:
 
 setup(
     name="flask-and-kafka",
-    version='0.0.3',
+    version='0.0.4',
     url="https://github.com/heysaeid/flask-and-kafka.git",
     license="MIT",
     author="Saeid Noormohammadi",

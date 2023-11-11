@@ -92,13 +92,15 @@ class FlaskKafkaConsumer:
                     return status
                 
             def wrapped_func(msg):
+                if self._retry:
+                    consume_config = self.get_consumer_config(topic, msg)
+                    
                 if app_context:
                     status = with_app_context_handler(msg, func)
                 else:
                     status = func(msg)
                 
                 if self._retry:
-                    consume_config = self.get_consumer_config(topic, msg)
                     current_retry = consume_config.get("retry_attempt_count", 0)
                     if status == KafkaStatusEnum.retry.value:
                         self.retry_again(
@@ -205,7 +207,7 @@ class FlaskKafkaConsumer:
                 self.send_to_failed_topic(topic)
 
     def get_consumer_config(self, topic: str, msg: dict) -> tuple[dict, str]:
-        if topic in [item[0] for item in self._retry_topics_enum.retry_topics_attempt_time_map.value.values()]:
+        if topic in [self.get_topic_with_prefix(item[0]) for item in self._retry_topics_enum.retry_topics_attempt_time_map.value.values()]:
             consume_config = msg.value().get("consume_config", {})
         else:
             consume_config = msg.value().pop("consume_config", {})

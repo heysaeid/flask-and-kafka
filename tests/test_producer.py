@@ -22,7 +22,16 @@ class TestFlaskKafkaProducer(unittest.TestCase):
         with patch.object(self.producer, 'producer', self.mock_producer):
             self.producer.send_message(self.topic, self.message)
 
-        self.mock_producer.produce.assert_called_once_with(topic=self.topic, value=self.message, key=None)
+        self.mock_producer.produce.assert_called_once_with(topic=self.topic, value=self.message, key=None, headers=None)
+        self.assertEqual(self.mock_producer.produce.call_count, 1)
+
+
+    def test_send_message_headers(self):
+        headers = {'header1': 'value1', 'header2': 'value2'}
+        with patch.object(self.producer, 'producer', self.mock_producer):
+            self.producer.send_message(self.topic, self.message, headers=headers)
+
+        self.mock_producer.produce.assert_called_once_with(topic=self.topic, value=self.message, key=None, headers=headers)
         self.assertEqual(self.mock_producer.produce.call_count, 1)
 
     def test_send_message_byte_values(self):
@@ -33,7 +42,7 @@ class TestFlaskKafkaProducer(unittest.TestCase):
             with patch.object(formatters, 'json', mock_json):
                 self.producer.send_message(self.topic, message_bytes, key=key_bytes)
 
-        self.mock_producer.produce.assert_called_once_with(topic=self.topic, value=message_bytes, key=key_bytes)
+        self.mock_producer.produce.assert_called_once_with(topic=self.topic, value=message_bytes, key=key_bytes, headers=None)
         self.assertEqual(self.mock_producer.produce.call_count, 1)
 
         self.assertEqual("b'key'", mock_json.dumps.call_args[0][0]['key'])
@@ -42,13 +51,13 @@ class TestFlaskKafkaProducer(unittest.TestCase):
     def test_send_message_flush(self):
         with patch.object(self.producer, 'producer', self.mock_producer):
             self.producer.send_message(self.topic, self.message, flush=True)
-        self.mock_producer.produce.assert_called_once_with(topic=self.topic, value=self.message, key=None)
+        self.mock_producer.produce.assert_called_once_with(topic=self.topic, value=self.message, key=None, headers=None)
         self.mock_producer.flush.assert_called_once_with()
 
     def test_send_message_poll(self):
         with patch.object(self.producer, 'producer', self.mock_producer):
             self.producer.send_message(self.topic, self.message, poll=True)
-        self.mock_producer.produce.assert_called_once_with(topic=self.topic, value=self.message, key=None)
+        self.mock_producer.produce.assert_called_once_with(topic=self.topic, value=self.message, key=None, headers=None)
         self.mock_producer.poll.assert_called_once_with(1)
 
     def test_close(self):

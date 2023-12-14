@@ -1,3 +1,8 @@
+[![Package version](https://img.shields.io/pypi/v/flask-and-kafka?color=%2334D058&label=pypi%20package)](https://pypi.org/project/flask-and-kafka/)
+[![Downloads](https://img.shields.io/pypi/dm/flask-and-kafka)](https://pypi.org/project/flask-and-kafka/)
+[![Supported Python versions](https://img.shields.io/pypi/pyversions/flask-and-kafka.svg?color=%2334D058)](https://pypi.org/project/flask-and-kafka/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/heysaeid/flask-and-kafka/blob/master/LICENSE)
+
 # Flask And Kafka
 Easily write your kafka producers and consumers in flask.
 

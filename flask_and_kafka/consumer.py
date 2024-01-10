@@ -44,7 +44,7 @@ class FlaskKafkaConsumer:
         self, 
         retry_and_fail_topics_prefix: str,
         producer: FlaskKafkaProducer,
-        consumer_retry_helper: 'ConsumerRetryHelper',
+        consumer_retry_helper: 'ConsumerRetry',
         retry_topics_enum: Enum = KafkaRetryTopicEnum,
         fail_topic_enum: Enum = KafkaFailTopicEnum,
     ):
@@ -61,6 +61,12 @@ class FlaskKafkaConsumer:
     def register_consumers(self, consumers: List[str]) -> None:
         for consumer_name in consumers:
             importlib.import_module(consumer_name)
+
+    def get_unique_id(self):
+        hashed = str(abs(hash(str(time.time()).encode("utf-8"))) % (10 ** 13))
+        padding_hashed = hashed.ljust(13, '0')
+        code = str(padding_hashed)
+        return code
 
     def handle_message(self, topic: str, group_id: str, num_consumers: int = 1, app_context: bool = False, retry_attempt_number: int = 0, **kwargs) -> Callable:
         """
@@ -93,7 +99,7 @@ class FlaskKafkaConsumer:
                 
             def wrapped_func(msg):
                 if self._retry:
-                    consume_config = self.get_consumer_config(topic, msg)
+                    consume_config, message_id = self.get_consumer_config(topic, msg)
                     
                 if app_context:
                     status = with_app_context_handler(msg, func)
@@ -106,11 +112,14 @@ class FlaskKafkaConsumer:
                         self.retry_again(
                             retry_attempt_number,
                             current_retry,
+                            message_id,
                             topic,
                             msg.value(),
                         )
                     elif status == KafkaStatusEnum.failed.value:
-                        self.send_to_failed_topic(topic)
+                        self.send_to_failed_topic(topic, message_id)
+                    
+                    self.consumer_logger.info('', extra={"consumer_message": msg, 'message_id': message_id})
 
             if group_id not in self.consumers:
                 self.consumers[group_id] = []
@@ -178,7 +187,7 @@ class FlaskKafkaConsumer:
     def _call_message_handlers(self, msg, topics):
         for topic, func in topics:
             if msg.topic() == topic:
-                self.consumer_logger.info('', extra={"consumer_message": msg})
+                # self.consumer_logger.info('', extra={"consumer_message": msg, 'message_id': message_id})
                 func(msg)
                 break
     
@@ -186,6 +195,7 @@ class FlaskKafkaConsumer:
         self, 
         retry_attempt_number: int,
         current_retry: int,
+        message_id: str,
         topic: str, 
         msg: dict,
     ) -> None:
@@ -199,25 +209,29 @@ class FlaskKafkaConsumer:
                             "topic": topic,
                             "retry_attempt_count": current_retry,
                             "retry_timestamp": time.time() + retry_time,
+                            "message_id": message_id,
                         },
                         **msg 
                     }
                 )
             else:
-                self.send_to_failed_topic(topic)
+                self.send_to_failed_topic(topic, message_id)
 
     def get_consumer_config(self, topic: str, msg: dict) -> tuple[dict, str]:
         if topic in [self.get_topic_with_prefix(item[0]) for item in self._retry_topics_enum.retry_topics_attempt_time_map.value.values()]:
             consume_config = msg.value().get("consume_config", {})
         else:
             consume_config = msg.value().pop("consume_config", {})
-        
-        return consume_config
+
+        message_id = consume_config.get("message_id", self.get_unique_id())
+
+        return consume_config, message_id
     
-    def send_to_failed_topic(self, topic: str):
+    def send_to_failed_topic(self, topic: str, message_id: str):
         self.send_to_kafka_failed_topic(
             issue_type = FailedIssueTypeEnum.consumer,
             topic = topic,
+            message_id = message_id
         )
     
     def send_to_kafka_failed_topic(self, issue_type = FailedIssueTypeEnum, **kwargs):
@@ -242,7 +256,7 @@ class FlaskKafkaConsumer:
         return msg
 
 
-class ConsumerRetryHelper:
+class ConsumerRetry:
 
     def __init__(
         self, 

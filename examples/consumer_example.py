@@ -1,5 +1,5 @@
 from flask import Flask
-from flask_and_kafka import FlaskKafkaConsumer, FlaskKafkaProducer, ConsumerRetryHelper
+from flask_and_kafka import FlaskKafkaConsumer, FlaskKafkaProducer, ConsumerRetry
 from flask_and_kafka import close_kafka
 from flask_and_kafka import KafkaStatusEnum
 
@@ -11,7 +11,7 @@ app.config['KAFKA_PRODUCER_CONFIGS'] = {"bootstrap.servers": 'localhost:29092'}
 kafka_consumer = FlaskKafkaConsumer(app)
 kafka_producer = FlaskKafkaProducer(app)
 
-kafka_consumer_retry_helper = ConsumerRetryHelper(kafka_consumer)
+kafka_consumer_retry_helper = ConsumerRetry(kafka_consumer)
 kafka_consumer.init_retry_process(
     retry_and_fail_topics_prefix = "local_", 
     producer = kafka_producer, 

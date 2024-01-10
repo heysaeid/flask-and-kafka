@@ -9,6 +9,7 @@ class ConsumerFormatter(logging.Formatter):
         return json.dumps({
             "time": record.asctime, 
             "threadName": record.threadName,
+            "message_id": record.message_id,
             'topic': record.consumer_message.topic(),
             'key': convert_bytes_to_repr(record.consumer_message.key()),
             'value': convert_bytes_to_repr(record.consumer_message.value()),

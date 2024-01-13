@@ -47,6 +47,7 @@ class FlaskKafkaConsumer:
         consumer_retry_helper: 'ConsumerRetry',
         retry_topics_enum: Enum = KafkaRetryTopicEnum,
         fail_topic_enum: Enum = KafkaFailTopicEnum,
+        app_context=False
     ):
         """
         Note: Type of messages that produced must be dictionary for retry process 
@@ -56,6 +57,7 @@ class FlaskKafkaConsumer:
         self._producer = producer
         self._retry_topics_enum = retry_topics_enum
         self._fail_topic_enum = fail_topic_enum
+        self._app_context = app_context
         consumer_retry_helper.register_retry_and_fail_consumers()  
 
     def register_consumers(self, consumers: List[str]) -> None:
@@ -283,35 +285,40 @@ class ConsumerRetry:
     def _register_retry_consumers(self):
         @self.kafka_consumer.handle_message(
             topic=self.kafka_consumer.get_topic_with_prefix(self.kafka_consumer._retry_topics_enum.retry_5m_topic.value),
-            group_id=f"{self.kafka_consumer.get_topic_with_prefix(self.kafka_consumer._retry_topics_enum.retry_5m_topic.value)}{self.consumer_group_postfix}"
+            group_id=f"{self.kafka_consumer.get_topic_with_prefix(self.kafka_consumer._retry_topics_enum.retry_5m_topic.value)}{self.consumer_group_postfix}",
+            app_context=self.kafka_consumer._app_context
         )
         def retry_5m_consumer(msg: dict):
             return self.retry_process(msg.value())
     
         @self.kafka_consumer.handle_message(
             topic=self.kafka_consumer.get_topic_with_prefix(self.kafka_consumer._retry_topics_enum.retry_10m_topic.value),
-            group_id=f"{self.kafka_consumer.get_topic_with_prefix(self.kafka_consumer._retry_topics_enum.retry_10m_topic.value)}{self.consumer_group_postfix}"
+            group_id=f"{self.kafka_consumer.get_topic_with_prefix(self.kafka_consumer._retry_topics_enum.retry_10m_topic.value)}{self.consumer_group_postfix}",
+            app_context=self.kafka_consumer._app_context
         )
         def retry_10m_consumer(msg: dict):
             return self.retry_process(msg.value())
     
         @self.kafka_consumer.handle_message(
             topic=self.kafka_consumer.get_topic_with_prefix(self.kafka_consumer._retry_topics_enum.retry_15m_topic.value), 
-            group_id=f"{self.kafka_consumer.get_topic_with_prefix(self.kafka_consumer._retry_topics_enum.retry_15m_topic.value)}{self.consumer_group_postfix}"
+            group_id=f"{self.kafka_consumer.get_topic_with_prefix(self.kafka_consumer._retry_topics_enum.retry_15m_topic.value)}{self.consumer_group_postfix}",
+            app_context=self.kafka_consumer._app_context
         )
         def retry_15m_consumer(msg: dict):
             return self.retry_process(msg.value())
         
         @self.kafka_consumer.handle_message(
             topic=self.kafka_consumer.get_topic_with_prefix(self.kafka_consumer._retry_topics_enum.retry_30m_topic.value), 
-            group_id=f"{self.kafka_consumer.get_topic_with_prefix(self.kafka_consumer._retry_topics_enum.retry_30m_topic.value)}{self.consumer_group_postfix}"
+            group_id=f"{self.kafka_consumer.get_topic_with_prefix(self.kafka_consumer._retry_topics_enum.retry_30m_topic.value)}{self.consumer_group_postfix}",
+            app_context=self.kafka_consumer._app_context
         )
         def retry_30m_consumer(msg: dict):
             return self.retry_process(msg.value())
         
         @self.kafka_consumer.handle_message(
             topic=self.kafka_consumer.get_topic_with_prefix(self.kafka_consumer._retry_topics_enum.retry_1h_topic.value),
-            group_id=f"{self.kafka_consumer.get_topic_with_prefix(self.kafka_consumer._retry_topics_enum.retry_1h_topic.value)}{self.consumer_group_postfix}"
+            group_id=f"{self.kafka_consumer.get_topic_with_prefix(self.kafka_consumer._retry_topics_enum.retry_1h_topic.value)}{self.consumer_group_postfix}",
+            app_context=self.kafka_consumer._app_context
         )
         def retry_1h_consumer(msg: dict):
             return self.retry_process(msg.value())
@@ -319,7 +326,8 @@ class ConsumerRetry:
     def _register_fail_consumers(self):
         @self.kafka_consumer.handle_message(
             topic=self.kafka_consumer.get_topic_with_prefix(self.kafka_consumer._fail_topic_enum.failed_topic.value), 
-            group_id=f"{self.kafka_consumer.get_topic_with_prefix(self.kafka_consumer._fail_topic_enum.failed_topic.value)}{self.consumer_group_postfix}"
+            group_id=f"{self.kafka_consumer.get_topic_with_prefix(self.kafka_consumer._fail_topic_enum.failed_topic.value)}{self.consumer_group_postfix}",
+            app_context=self.kafka_consumer._app_context
         )
         def failed_consumer(msg: dict):
             print('Failed message: ' + str(msg.value()))

@@ -1,5 +1,7 @@
+import json
+
 from flask import Flask
-from confluent_kafka import Producer
+from confluent_kafka import SerializingProducer
 from confluent_kafka import KafkaError
 from .log import producer_logger
 
@@ -14,7 +16,9 @@ class FlaskKafkaProducer:
 
     def init_app(self, app: Flask) -> None:
         app.extensions['kafka_producer'] = self
-        self.producer = Producer(app.config['KAFKA_PRODUCER_CONFIGS'])
+        if not app.config['KAFKA_PRODUCER_CONFIGS'].get('value.serialize'):
+            app.config['KAFKA_PRODUCER_CONFIGS']['value.serializer'] = self.json_serializer
+        self.producer = SerializingProducer(app.config['KAFKA_PRODUCER_CONFIGS'])
         self.producer_logger = producer_logger(name='producer_logger', file=app.config.get('KAFKA_PRODUCER_LOG_PATH', 'logs/kafka_producer.log'))
 
     def send_message(self, topic: str, value: any, key: str = None, flush: bool = False, poll: bool = True, poll_timeout = 1, **kwargs) -> None:
@@ -66,7 +70,14 @@ class FlaskKafkaProducer:
                     'extra': {**kwargs}
                 }
             })
-        
+    
+    def json_serializer(self, msg, s_obj):
+        try:
+            msg = json.dumps(msg)
+        except Exception as e:
+            ...
+        return msg
+
     def close(self):
         self.producer.flush()
         self.producer.poll(0)

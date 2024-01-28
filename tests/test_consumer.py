@@ -3,6 +3,7 @@ from unittest import mock
 
 import confluent_kafka
 from flask import Flask
+
 from flask_and_kafka import FlaskKafkaConsumer
 
 
@@ -13,16 +14,21 @@ class TestFlaskKafkaConsumer(unittest.TestCase):
 
     def setUp(self):
         self.app = Flask(__name__)
-        self.app.config['KAFKA_CONSUMER_CONFIGS'] = {
-            'bootstrap.servers': 'localhost:9092',
-            'auto.offset.reset': 'earliest'
+        self.app.config["KAFKA_CONSUMER_CONFIGS"] = {
+            "bootstrap.servers": "localhost:9092",
+            "auto.offset.reset": "earliest",
         }
         self.consumer = FlaskKafkaConsumer(self.app)
 
     def test_handle_message_decorator(self):
-        @self.consumer.handle_message(topic=self.topic, group_id=self.group_id, num_consumers=self.num_consumers)
+        @self.consumer.handle_message(
+            topic=self.topic,
+            group_id=self.group_id,
+            num_consumers=self.num_consumers,
+        )
         def test_handler(msg):
             pass
+
         self.assertEqual(len(self.consumer.consumers), self.num_consumers)
         self.assertEqual(len(self.consumer.topics[self.group_id]), 1)
 
@@ -30,6 +36,7 @@ class TestFlaskKafkaConsumer(unittest.TestCase):
         @self.consumer.handle_message(self.topic, self.group_id, 5)
         def test_handler(msg):
             pass
+
         self.assertEqual(len(self.consumer.consumers), self.num_consumers)
 
     def test_handle_message_decorator_with_2_different_consumer(self):
@@ -37,7 +44,9 @@ class TestFlaskKafkaConsumer(unittest.TestCase):
         def test_handler(msg):
             pass
 
-        @self.consumer.handle_message(self.topic+'_1', self.group_id+'_1', 1)
+        @self.consumer.handle_message(
+            self.topic + "_1", self.group_id + "_1", 1
+        )
         def test_handler2(msg):
             pass
 
@@ -45,7 +54,6 @@ class TestFlaskKafkaConsumer(unittest.TestCase):
         self.assertEqual(len(self.consumer.topics), 2)
 
     def test_call_message_handler(self):
-
         handler_was_called = False
 
         @self.consumer.handle_message(self.topic, self.group_id, 1)
@@ -55,8 +63,8 @@ class TestFlaskKafkaConsumer(unittest.TestCase):
             self.assertEqual(msg.topic(), self.topic)
             self.assertEqual(msg.partition(), 0)
             self.assertEqual(msg.offset(), 1)
-            self.assertEqual(msg.value(), b'test value')
-            self.assertEqual(msg.key(), b'key value')
+            self.assertEqual(msg.value(), b"test value")
+            self.assertEqual(msg.key(), b"key value")
             self.assertEqual(msg.error(), None)
             self.assertEqual(msg.headers(), None)
 
@@ -69,15 +77,21 @@ class TestFlaskKafkaConsumer(unittest.TestCase):
         msg.error.return_value = None
         msg.headers.return_value = None
 
-        self.consumer._call_message_handlers(msg, self.consumer.topics[self.group_id])
+        self.consumer._call_message_handlers(
+            msg, self.consumer.topics[self.group_id]
+        )
         self.assertTrue(handler_was_called, "handler was not called")
 
-
     def test_start_stop(self):
-        @self.consumer.handle_message(self.topic, self.group_id, self.num_consumers)
+        @self.consumer.handle_message(
+            self.topic, self.group_id, self.num_consumers
+        )
         def test_handler(msg):
             pass
-        with mock.patch.object(self.consumer, "_consume_messages", return_value=None) as mock_consume:
+
+        with mock.patch.object(
+            self.consumer, "_consume_messages", return_value=None
+        ) as mock_consume:
             self.consumer.start()
             self.assertEqual(len(self.consumer.threads), 1)
             self.consumer.stop()

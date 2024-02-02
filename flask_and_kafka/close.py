@@ -1,9 +1,8 @@
-from typing import Callable
 import signal
+from typing import Callable
 
 
-def close_kafka(producer = None, consumer = None, func: Callable = None) -> None:
-
+def close_kafka(producer=None, consumer=None, func: Callable = None) -> None:
     def handle_sig(*args):
         if producer is not None:
             producer.close()

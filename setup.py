@@ -1,13 +1,12 @@
 from setuptools import setup
 
-
-with open("README.md", "r") as f:
+with open("README.md") as f:
     long_description = f.read()
 
 
 setup(
     name="flask-and-kafka",
-    version='0.0.3',
+    version="0.0.4",
     url="https://github.com/heysaeid/flask-and-kafka.git",
     license="MIT",
     author="Saeid Noormohammadi",
@@ -16,17 +15,17 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     keywords=[
-        "flask", 
-        "kafka", 
-        "flask kafka", 
-        "flask kafka consumer", 
-        "flask-kafka", 
-        "flask-kafka-consumer", 
-        "flask-and-kafka", 
-        "Flask-And-Kafka", 
+        "flask",
+        "kafka",
+        "flask kafka",
+        "flask kafka consumer",
+        "flask-kafka",
+        "flask-kafka-consumer",
+        "flask-and-kafka",
+        "Flask-And-Kafka",
         "flask kafka producer",
         "kafka producer",
-        "flask-kafka-producer"
+        "flask-kafka-producer",
     ],
     packages=["flask_and_kafka"],
     zip_safe=False,
@@ -45,6 +44,9 @@ setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
 )

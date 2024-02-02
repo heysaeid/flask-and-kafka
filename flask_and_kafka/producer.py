@@ -1,13 +1,13 @@
 import logging
+from typing import Union
 
+from confluent_kafka import KafkaError, Producer
 from flask import Flask
-from confluent_kafka import Producer
-from confluent_kafka import KafkaError
+
 from .log import producer_logger
 
 
 class FlaskKafkaProducer:
-
     def __init__(self, app: Flask = None) -> None:
         self.producer = None
 
@@ -15,18 +15,31 @@ class FlaskKafkaProducer:
             self.init_app(app)
 
     def init_app(self, app: Flask) -> None:
-        app.extensions['kafka_producer'] = self
-        self.producer = Producer(app.config['KAFKA_PRODUCER_CONFIGS'])
-
+        app.extensions["kafka_producer"] = self
+        self.producer = Producer(app.config["KAFKA_PRODUCER_CONFIGS"])
         logger_name = 'producer_logger'
         if app.config.get('KAFKA_LOG_EXTERNALLY_CONFIGURED', ''):
             self.producer_logger = logging.getLogger(logger_name)
         else:
-            self.producer_logger = producer_logger(name=logger_name, file=app.config.get('KAFKA_PRODUCER_LOG_PATH', 'logs/kafka_producer.log'))
+            self.producer_logger = producer_logger(
+                name="producer_logger",
+                file=app.config.get(
+                    "KAFKA_PRODUCER_LOG_PATH", "logs/kafka_producer.log"
+                ),
+            )
 
-    def send_message(self, topic: str, value: any, key: str = None, headers = None,
-                     flush: bool = False, poll: bool = True, poll_timeout = 1, **kwargs) -> None:
-        """ 
+    def send_message(
+        self,
+        topic: str,
+        value: any,
+        key: Union[str, bytes] = None,
+        headers: dict = None,
+        flush: bool = False,
+        poll: bool = True,
+        poll_timeout=1,
+        **kwargs,
+    ) -> None:
+        """
         Send a message to the specified Kafka topic with the given key and value.
 
         Args:
@@ -48,35 +61,37 @@ class FlaskKafkaProducer:
         Note:
             If `flush` is True, any outstanding messages in the producer's buffer will be sent immediately after the current message is sent.
             If `poll` is True, the producer will wait for any outstanding messages to be sent before returning, up to the specified `poll_timeout`.
-            The `poll` argument is only relevant if `flush` is False, since the producer always waits for outstanding messages to be sent before flushing. 
+            The `poll` argument is only relevant if `flush` is False, since the producer always waits for outstanding messages to be sent before flushing.
         """
 
-        
         error = None
         try:
             self.producer.produce(topic=topic, key=key, value=value, headers=headers, **kwargs)
         except KafkaError as e:
-            error = f'Error producing message to topic {topic}: {e}'
+            error = f"Error producing message to topic {topic}: {e}"
         else:
             if flush:
                 self.producer.flush()
             if poll:
                 self.producer.poll(poll_timeout)
         finally:
-            self.producer_logger.info('', extra={
-                'producer_log': {
-                    'topic': topic,
-                    'key': key,
-                    'value': value,
-                    'headers': headers,
-                    'flush': flush,
-                    'poll': poll,
-                    'poll_timeout': poll_timeout,
-                    'error': error,
-                    'extra': {**kwargs}
-                }
-            })
-        
+            self.producer_logger.info(
+                "",
+                extra={
+                    "producer_log": {
+                        "topic": topic,
+                        "key": key,
+                        "value": value,
+                        "headers": headers,
+                        "flush": flush,
+                        "poll": poll,
+                        "poll_timeout": poll_timeout,
+                        "error": error,
+                        "extra": {**kwargs},
+                    }
+                },
+            )
+
     def close(self):
         self.producer.flush()
         self.producer.poll(0)

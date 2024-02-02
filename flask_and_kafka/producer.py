@@ -1,3 +1,5 @@
+import logging
+
 from flask import Flask
 from confluent_kafka import Producer
 from confluent_kafka import KafkaError
@@ -15,7 +17,12 @@ class FlaskKafkaProducer:
     def init_app(self, app: Flask) -> None:
         app.extensions['kafka_producer'] = self
         self.producer = Producer(app.config['KAFKA_PRODUCER_CONFIGS'])
-        self.producer_logger = producer_logger(name='producer_logger', file=app.config.get('KAFKA_PRODUCER_LOG_PATH', 'logs/kafka_producer.log'))
+
+        logger_name = 'producer_logger'
+        if app.config.get('KAFKA_LOG_EXTERNALLY_CONFIGURED', ''):
+            self.producer_logger = logging.getLogger(logger_name)
+        else:
+            self.producer_logger = producer_logger(name=logger_name, file=app.config.get('KAFKA_PRODUCER_LOG_PATH', 'logs/kafka_producer.log'))
 
     def send_message(self, topic: str, value: any, key: str = None, headers = None,
                      flush: bool = False, poll: bool = True, poll_timeout = 1, **kwargs) -> None:

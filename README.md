@@ -124,3 +124,12 @@ Note:
 + If `flush` is True, any outstanding messages in the producer's buffer will be sent immediately after the current message is sent.
 + If `poll` is True, the producer will wait for any outstanding messages to be sent before returning, up to the specified `poll_timeout`.
 + The `poll` argument is only relevant if `flush` is False, since the producer always waits for outstanding messages to be sent before flushing. 
+
+### Configuring logging infrastructure
+
+The environment variables `KAFKA_PRODUCER_LOG_PATH` and `KAFKA_CONSUMER_LOG_PATH` set the file where the log records 
+are written. By default these are `logs/kafka_producer.log` and `logs/kafka_consumer.log`.
+
+If you have your own logging configuration you can set `KAFKA_LOG_EXTERNALLY_CONFIGURED=1` and the 
+applications logging configuration will be respected. The python logger names are `producer_logger` and 
+`consumer_logger`.  

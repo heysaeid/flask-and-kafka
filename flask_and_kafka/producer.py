@@ -1,3 +1,6 @@
+import logging
+from typing import Union
+
 from confluent_kafka import KafkaError, Producer
 from flask import Flask
 
@@ -14,18 +17,23 @@ class FlaskKafkaProducer:
     def init_app(self, app: Flask) -> None:
         app.extensions["kafka_producer"] = self
         self.producer = Producer(app.config["KAFKA_PRODUCER_CONFIGS"])
-        self.producer_logger = producer_logger(
-            name="producer_logger",
-            file=app.config.get(
-                "KAFKA_PRODUCER_LOG_PATH", "logs/kafka_producer.log"
-            ),
-        )
+        logger_name = 'producer_logger'
+        if app.config.get('KAFKA_LOG_EXTERNALLY_CONFIGURED', ''):
+            self.producer_logger = logging.getLogger(logger_name)
+        else:
+            self.producer_logger = producer_logger(
+                name="producer_logger",
+                file=app.config.get(
+                    "KAFKA_PRODUCER_LOG_PATH", "logs/kafka_producer.log"
+                ),
+            )
 
     def send_message(
         self,
         topic: str,
         value: any,
-        key: str = None,
+        key: Union[str, bytes] = None,
+        headers: dict = None,
         flush: bool = False,
         poll: bool = True,
         poll_timeout=1,
@@ -38,6 +46,7 @@ class FlaskKafkaProducer:
             topic (str): The Kafka topic to send the message to.
             value (any): The message value to send.
             key (str, optional): The message key to use (default: None).
+            headers (dict[str, Union[str, None]], optional): Message headers to include (default: None).
             flush (bool, optional): Whether to flush the producer's message buffer immediately after sending the message (default: False).
             poll (bool, optional): Whether to wait for any outstanding messages to be sent before returning (default: True).
             poll_timeout (float, optional): The maximum amount of time to wait for outstanding messages to be sent, in seconds (default: 1).
@@ -57,7 +66,7 @@ class FlaskKafkaProducer:
 
         error = None
         try:
-            self.producer.produce(topic=topic, key=key, value=value, **kwargs)
+            self.producer.produce(topic=topic, key=key, value=value, headers=headers, **kwargs)
         except KafkaError as e:
             error = f"Error producing message to topic {topic}: {e}"
         else:
@@ -73,6 +82,7 @@ class FlaskKafkaProducer:
                         "topic": topic,
                         "key": key,
                         "value": value,
+                        "headers": headers,
                         "flush": flush,
                         "poll": poll,
                         "poll_timeout": poll_timeout,

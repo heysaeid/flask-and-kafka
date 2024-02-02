@@ -66,7 +66,7 @@ class TestFlaskKafkaConsumer(unittest.TestCase):
             self.assertEqual(msg.value(), b"test value")
             self.assertEqual(msg.key(), b"key value")
             self.assertEqual(msg.error(), None)
-            self.assertEqual(msg.headers(), None)
+            self.assertEqual(msg.headers(), {"first": "one", "second": 2})
 
         msg = mock.Mock(confluent_kafka.Message)
         msg.topic.return_value = self.topic
@@ -74,8 +74,8 @@ class TestFlaskKafkaConsumer(unittest.TestCase):
         msg.offset.return_value = 1
         msg.value.return_value = b"test value"
         msg.key.return_value = b"key value"  # can be bytes or string.
+        msg.headers.return_value = {"first": "one", "second": 2}
         msg.error.return_value = None
-        msg.headers.return_value = None
 
         self.consumer._call_message_handlers(
             msg, self.consumer.topics[self.group_id]

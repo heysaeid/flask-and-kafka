@@ -1,4 +1,5 @@
 import importlib
+import logging
 import threading
 from typing import Callable, List, Tuple
 
@@ -22,12 +23,16 @@ class FlaskKafkaConsumer:
     def init_app(self, app: Flask) -> None:
         self._app = app
         app.extensions["kafka_consumer"] = self
-        self.consumer_logger = consumer_logger(
-            name="consumer_logger",
-            file=app.config.get(
-                "KAFKA_CONSUMER_LOG_PATH", "logs/kafka_consumer.log"
-            ),
-        )
+        logger_name = 'consumer_logger'
+        if app.config.get('KAFKA_LOG_EXTERNALLY_CONFIGURED', ''):
+            self.consumer_logger = logging.getLogger(logger_name)
+        else:
+            self.consumer_logger = consumer_logger(
+                name=logger_name,
+                file=app.config.get(
+                    "KAFKA_CONSUMER_LOG_PATH", "logs/kafka_consumer.log"
+                ),
+            )
 
     def register_consumers(self, consumers: List[str]) -> None:
         for consumer_name in consumers:

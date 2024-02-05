@@ -11,13 +11,13 @@ This plugin was developed using confluent-kafka to help you use your producers a
 
 ## Installation
 Install it with the following command:
-```
+```shell
 pip install flask-and-kafka
 ```
 
 ## Usage
 Using consumer:
-```
+```python
 from flask import Flask
 from flask_and_kafka import FlaskKafkaConsumer
 from flask_and_kafka import close_kafka
@@ -42,13 +42,13 @@ You can also write your own consumers in separate modules and use them using the
 
 consumers/test_consumer.py
 ‍‍‍‍
-```
+```python
 @kafka_consumer.handle_message(topic='test-topic', group_id='group1')
 def handle_logistic_message(msg):
     print(msg.value())
 ```
 app.py
-```
+```python
 from flask import Flask
 from flask_and_kafka import FlaskKafkaConsumer
 from flask_and_kafka import close_kafka
@@ -69,7 +69,7 @@ if __name__ == '__main__':
 <hr style="border:2px solid gray">
 Using producer:
 
-```
+```python
 from flask import Flask
 from flask_and_kafka import FlaskKafkaProducer
 from flask_and_kafka import close_kafka
@@ -128,4 +128,4 @@ Note:
 
 + If `flush` is True, any outstanding messages in the producer's buffer will be sent immediately after the current message is sent.
 + If `poll` is True, the producer will wait for any outstanding messages to be sent before returning, up to the specified `poll_timeout`.
-+ The `poll` argument is only relevant if `flush` is False, since the producer always waits for outstanding messages to be sent before flushing. 
++ The `poll` argument is only relevant if `flush` is False, since the producer always waits for outstanding messages to be sent before flushing.

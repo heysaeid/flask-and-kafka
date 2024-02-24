@@ -2,6 +2,7 @@ import time
 import json
 import importlib
 import threading
+import traceback
 
 from typing import List
 from typing import Tuple
@@ -106,7 +107,7 @@ class FlaskKafkaConsumer:
                 if app_context:
                     status = with_app_context_handler(msg, func)
                 else:
-                    status = func(msg)
+                    result_message, status = func(msg)
                 
                 if self._retry:
                     current_retry = consume_config.get("retry_attempt_count", 0)
@@ -119,9 +120,9 @@ class FlaskKafkaConsumer:
                             msg.value(),
                         )
                     elif status == KafkaStatusEnum.failed.value:
-                        self.send_to_failed_topic(topic, message_id)
+                        self.send_to_failed_topic(topic, message_id, result_message)
                     
-                    self.consumer_logger.info('', extra={"consumer_message": msg, 'message_id': message_id})
+                    self.consumer_logger.info('', extra={"consumer_message": msg, 'message_id': message_id, 'result_message': result_message})
 
             if group_id not in self.consumers:
                 self.consumers[group_id] = []
@@ -217,7 +218,7 @@ class FlaskKafkaConsumer:
                     }
                 )
             else:
-                self.send_to_failed_topic(topic, message_id)
+                self.send_to_failed_topic(topic, message_id, f"Max retry {retry_attempt_number} reached")
 
     def get_consumer_config(self, topic: str, msg: dict) -> tuple[dict, str]:
         if topic in [self.get_topic_with_prefix(item[0]) for item in self._retry_topics_enum.retry_topics_attempt_time_map.value.values()]:
@@ -229,11 +230,12 @@ class FlaskKafkaConsumer:
 
         return consume_config, message_id
     
-    def send_to_failed_topic(self, topic: str, message_id: str):
+    def send_to_failed_topic(self, topic: str, message_id: str, result_message: str):
         self.send_to_kafka_failed_topic(
             issue_type = FailedIssueTypeEnum.consumer,
             topic = topic,
-            message_id = message_id
+            message_id = message_id,
+            result_message=result_message
         )
     
     def send_to_kafka_failed_topic(self, issue_type = FailedIssueTypeEnum, **kwargs):
@@ -275,8 +277,8 @@ class ConsumerRetry:
             time.sleep(max(consumer_config["retry_timestamp"] - time.time(), 0))
             self.kafka_consumer._producer.send_message(consumer_config["topic"], msg)
         except Exception as e:
-            return KafkaStatusEnum.failed.value
-        return KafkaStatusEnum.success.value
+            return traceback.format_exc(), KafkaStatusEnum.failed.value
+        return "", KafkaStatusEnum.success.value
     
     def register_retry_and_fail_consumers(self):
         self._register_retry_consumers()
@@ -331,3 +333,4 @@ class ConsumerRetry:
         )
         def failed_consumer(msg: dict):
             print('Failed message: ' + str(msg.value()))
+            return "", KafkaStatusEnum.success.value

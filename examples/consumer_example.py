@@ -1,3 +1,4 @@
+import traceback
 from flask import Flask
 from flask_and_kafka import FlaskKafkaConsumer, FlaskKafkaProducer, ConsumerRetry
 from flask_and_kafka import close_kafka
@@ -18,7 +19,7 @@ kafka_consumer.init_retry_process(
     consumer_retry_helper = kafka_consumer_retry_helper
 )
 
-@kafka_consumer.handle_message(topic='test-topic', group_id='group1', retry_attempt_number=4)
+@kafka_consumer.handle_message(topic='test-topic', group_id='group1', retry_attempt_number=5)
 def handle_logistic_message(msg):
     """
     Return value can be three option of KafkaStatusEnum:
@@ -26,8 +27,11 @@ def handle_logistic_message(msg):
         KafkaStatusEnum.success.value -> for successfull ending fuction 
         KafkaStatusEnum.failed.value -> send message to the fail topic
     """
-    print(msg.value())
-    return KafkaStatusEnum.failed.value
+    try:
+        print(msg.value())
+    except Exception as e:
+        return traceback.format_exc(), KafkaStatusEnum.failed.value
+    return "", KafkaStatusEnum.success.value
 
 if __name__ == '__main__':
     kafka_consumer.start()

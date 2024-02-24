@@ -10,6 +10,7 @@ class ConsumerFormatter(logging.Formatter):
             "time": record.asctime, 
             "threadName": record.threadName,
             "message_id": record.message_id,
+            "result_message": record.result_message,
             'topic': record.consumer_message.topic(),
             'key': convert_bytes_to_repr(record.consumer_message.key()),
             'value': convert_bytes_to_repr(record.consumer_message.value()),

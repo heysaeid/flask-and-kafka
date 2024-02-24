@@ -97,15 +97,15 @@ class FlaskKafkaConsumer:
 
             def with_app_context_handler(msg, func):
                 with self._app.app_context():
-                    status = func(msg)
-                    return status
+                    result_message, status = func(msg)
+                    return result_message, status
                 
             def wrapped_func(msg):
                 if self._retry:
                     consume_config, message_id = self.get_consumer_config(topic, msg)
                     
                 if app_context:
-                    status = with_app_context_handler(msg, func)
+                    result_message, status = with_app_context_handler(msg, func)
                 else:
                     result_message, status = func(msg)
                 
